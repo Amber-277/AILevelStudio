@@ -1,76 +1,81 @@
+
 @tool
 extends Node2D
 
 
-func _ready() -> void:
-	pass
+const GENERATED_NODE_NAME = "GeneratedLevel"
+const GENERATED_META_KEY = "ai_level_studio_generated"
+
+const LevelValidator = preload("res://scripts/level_validator.gd")
+const LevelGenerator = preload("res://scripts/level_generator.gd")
 
 
 # 接收插件传入的关卡数据
-func load_level(level_data: Dictionary) -> void:
-	generate_level(level_data)
+func load_level(level_data: Dictionary) -> bool:
+
+	# 第一步：创建验证器
+	var validator = LevelValidator.new()
+
+	if validator == null:
+		push_error("无法创建关卡验证器！")
+		return false
+
+	# 第二步：验证数据
+	if not validator.validate_level_data(level_data):
+		push_error("关卡数据验证失败，保留原有地图。")
+		return false
+
+	# 第三步：检查旧生成容器
+	var old_generated = get_node_or_null(GENERATED_NODE_NAME)
+
+	if old_generated != null:
+
+		if not old_generated.has_meta(GENERATED_META_KEY):
+			push_error("发现同名节点，但它不是 AI Level Studio 生成的节点。")
+			return false
+
+		if old_generated.get_meta(GENERATED_META_KEY) != true:
+			push_error("生成容器标记异常，取消导入。")
+			return false
+
+	# 第四步：创建生成器
+	var generator = LevelGenerator.new()
+
+	if generator == null:
+		push_error("无法创建关卡生成器！")
+		return false
+
+	# 第五步：在场景外创建新地图
+	var new_generated: Node2D = generator.generate_level(level_data)
+
+	if new_generated == null:
+		push_error("新地图生成失败，保留原有地图。")
+		return false
+
+	# 第六步：移除旧地图
+	if old_generated != null:
+		remove_child(old_generated)
+		old_generated.free()
+
+	# 第七步：将新地图加入场景
+	add_child(new_generated)
+
+	# 第八步：设置场景所有者
+	set_owner_recursive(new_generated, self)
+
+	# 调试信息：检查节点是否真正加入场景
+	print("当前根节点子节点数量：", get_child_count())
+	print("生成节点是否加入场景树：", new_generated.is_inside_tree())
+	print("生成节点 Owner：", new_generated.owner)
+
+	print("关卡导入成功！")
+	return true
 
 
-# 根据关卡数据生成地图
-func generate_level(level_data: Dictionary) -> void:
-	# 清理上一次生成的地图
-	for child in get_children():
-		child.queue_free()
+# 递归设置场景所有者
+func set_owner_recursive(node: Node, scene_owner: Node) -> void:
 
-	# 读取地图信息
-	var width = int(level_data["width"])
-	var height = int(level_data["height"])
-	var cell_size = 64
+	node.owner = scene_owner
 
-	print("开始生成关卡：", level_data["name"])
-
-	# 生成地图背景
-	var background = ColorRect.new()
-	background.color = Color(0.12, 0.12, 0.16)
-	background.position = Vector2.ZERO
-	background.size = Vector2(width * cell_size, height * cell_size)
-	add_child(background)
-
-	# 生成竖向网格线
-	for x in range(width + 1):
-		var line = Line2D.new()
-		line.add_point(Vector2(x * cell_size, 0))
-		line.add_point(Vector2(x * cell_size, height * cell_size))
-		line.width = 1.0
-		line.default_color = Color(0.35, 0.35, 0.4)
-		add_child(line)
-
-	# 生成横向网格线
-	for y in range(height + 1):
-		var line = Line2D.new()
-		line.add_point(Vector2(0, y * cell_size))
-		line.add_point(Vector2(width * cell_size, y * cell_size))
-		line.width = 1.0
-		line.default_color = Color(0.35, 0.35, 0.4)
-		add_child(line)
-
-	# 生成关卡实体
-	for entity in level_data["entities"]:
-		var x = int(entity["position"]["x"])
-		var y = int(entity["position"]["y"])
-
-		# 转换左下角原点为 Godot 左上角原点
-		var screen_y = height - 1 - y
-
-		var block = ColorRect.new()
-		block.size = Vector2(cell_size * 0.8, cell_size * 0.8)
-		block.position = Vector2(
-			x * cell_size + cell_size * 0.1,
-			screen_y * cell_size + cell_size * 0.1
-		)
-
-		if entity["type"] == "wall":
-			block.color = Color(0.65, 0.65, 0.7)
-		elif entity["type"] == "mirror":
-			block.color = Color(0.2, 0.8, 1.0)
-		else:
-			block.color = Color(1.0, 0.8, 0.2)
-
-		add_child(block)
-
-	print("关卡生成完成！")
+	for child in node.get_children():
+		set_owner_recursive(child, scene_owner)

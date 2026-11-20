@@ -1,0 +1,10 @@
+{
+  "protocol_version": "1.0",
+  "level_id": "invalid_test",
+  "name": "错误测试关卡",
+  "width": -10,
+  "height": 8,
+  "cell_size": 1.0,
+  "coordinate_system": "cartesian_y_up",
+  "entities": []
+}

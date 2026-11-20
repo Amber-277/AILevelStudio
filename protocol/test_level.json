@@ -28,7 +28,7 @@
         "y": 4
       },
       "direction": "up",
-      "rotation": 45.0,
+      "rotation": 0.0,
       "layer": "default",
       "properties": {}
     }

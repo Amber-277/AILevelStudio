@@ -4,81 +4,89 @@ extends EditorPlugin
 
 
 const MENU_ITEM_NAME = "导入 AI Level Studio 关卡"
-const PREVIEW_SCENE_PATH = "res://scenes/level_preview.tscn"
 
 var file_dialog: FileDialog
 
 
 func _enter_tree() -> void:
-    file_dialog = FileDialog.new()
-    file_dialog.title = "选择 AI Level Studio 关卡"
-    file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-    file_dialog.access = FileDialog.ACCESS_FILESYSTEM
-    file_dialog.filters = PackedStringArray([
-        "*.json ; JSON 关卡文件"
-    ])
 
-    file_dialog.file_selected.connect(_on_file_selected)
+	file_dialog = FileDialog.new()
+	file_dialog.title = "选择 AI Level Studio 关卡"
+	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	file_dialog.filters = PackedStringArray([
+		"*.json ; JSON 关卡文件"
+	])
 
-    get_editor_interface().get_base_control().add_child(file_dialog)
+	file_dialog.file_selected.connect(_on_file_selected)
 
-    add_tool_menu_item(MENU_ITEM_NAME, _on_import_level)
+	get_editor_interface().get_base_control().add_child(file_dialog)
 
-    print("AI Level Studio 插件已启用！")
+	add_tool_menu_item(MENU_ITEM_NAME, _on_import_level)
+
+	print("AI Level Studio 插件已启用！")
 
 
 func _exit_tree() -> void:
-    remove_tool_menu_item(MENU_ITEM_NAME)
 
-    if is_instance_valid(file_dialog):
-        file_dialog.queue_free()
+	remove_tool_menu_item(MENU_ITEM_NAME)
 
-    print("AI Level Studio 插件已关闭！")
+	if is_instance_valid(file_dialog):
+		file_dialog.queue_free()
+
+	print("AI Level Studio 插件已关闭！")
 
 
 func _on_import_level() -> void:
-    file_dialog.popup_centered(Vector2i(900, 600))
+
+	file_dialog.popup_centered(Vector2i(900, 600))
 
 
 func _on_file_selected(path: String) -> void:
-    print("选择的关卡文件：", path)
 
-    # 读取 JSON 文件
-    var file = FileAccess.open(path, FileAccess.READ)
+	print("选择的关卡文件：", path)
 
-    if file == null:
-        push_error("无法打开关卡文件！")
-        return
+	# 读取 JSON 文件
+	var file = FileAccess.open(path, FileAccess.READ)
 
-    var json_text = file.get_as_text()
-    file.close()
+	if file == null:
+		push_error("无法打开关卡文件！")
+		return
 
-    # 解析 JSON
-    var json = JSON.new()
-    var error = json.parse(json_text)
+	var json_text = file.get_as_text()
+	file.close()
 
-    if error != OK:
-        push_error("JSON 解析失败：" + json.get_error_message())
-        return
+	# 解析 JSON
+	var json = JSON.new()
+	var error = json.parse(json_text)
 
-    var level_data = json.data
+	if error != OK:
+		push_error("JSON 解析失败：" + json.get_error_message())
+		return
 
-    if typeof(level_data) != TYPE_DICTIONARY:
-        push_error("关卡 JSON 的最外层必须是对象！")
-        return
+	var level_data = json.data
 
-    # 获取当前打开的场景
-    var edited_scene_root = get_editor_interface().get_edited_scene_root()
+	if typeof(level_data) != TYPE_DICTIONARY:
+		push_error("关卡 JSON 的最外层必须是对象！")
+		return
 
-    if edited_scene_root == null:
-        push_error("当前没有打开的场景！")
-        return
+	# 获取当前打开的场景
+	var edited_scene_root = get_editor_interface().get_edited_scene_root()
 
-    # 调用场景脚本中的 load_level 函数
-    if not edited_scene_root.has_method("load_level"):
-        push_error("当前场景没有 load_level 函数！")
-        return
+	if edited_scene_root == null:
+		push_error("当前没有打开的场景！")
+		return
 
-    edited_scene_root.load_level(level_data)
+	# 检查场景是否具有 load_level 函数
+	if not edited_scene_root.has_method("load_level"):
+		push_error("当前场景没有 load_level 函数！")
+		return
 
-    print("关卡数据已传递给场景！")
+	# 调用场景脚本并检查实际返回值
+	var success: bool = edited_scene_root.load_level(level_data)
+
+	if not success:
+		push_error("关卡导入失败，原有地图保持不变。")
+		return
+
+	print("AI Level Studio 关卡导入成功！")
