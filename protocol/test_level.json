@@ -1,0 +1,36 @@
+{
+  "protocol_version": "1.0",
+  "level_id": "test_level_001",
+  "name": "我的第一个测试关卡",
+  "description": "用于测试 Python 到 Godot 的数据传递",
+  "width": 10,
+  "height": 8,
+  "cell_size": 1.0,
+  "coordinate_system": "cartesian_y_up",
+  "entities": [
+    {
+      "id": "wall_001",
+      "type": "wall",
+      "position": {
+        "x": 2,
+        "y": 3
+      },
+      "direction": null,
+      "rotation": 0.0,
+      "layer": "default",
+      "properties": {}
+    },
+    {
+      "id": "mirror_001",
+      "type": "mirror",
+      "position": {
+        "x": 5,
+        "y": 4
+      },
+      "direction": "up",
+      "rotation": 45.0,
+      "layer": "default",
+      "properties": {}
+    }
+  ]
+}

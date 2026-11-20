@@ -1,0 +1,168 @@
+{
+    "$defs": {
+        "LevelEntity": {
+            "additionalProperties": false,
+            "description": "关卡中的一个实体。",
+            "properties": {
+                "id": {
+                    "description": "实体唯一 ID",
+                    "minLength": 1,
+                    "title": "Id",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "实体类型，例如 laser、mirror、wall",
+                    "minLength": 1,
+                    "title": "Type",
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/$defs/Position"
+                },
+                "direction": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "实体朝向，例如 up、down、left、right",
+                    "title": "Direction"
+                },
+                "rotation": {
+                    "default": 0.0,
+                    "description": "旋转角度，单位为度，正数表示逆时针",
+                    "title": "Rotation",
+                    "type": "number"
+                },
+                "layer": {
+                    "default": "default",
+                    "description": "实体所属图层",
+                    "minLength": 1,
+                    "title": "Layer",
+                    "type": "string"
+                },
+                "asset_id": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "资源标识，由引擎适配器映射",
+                    "title": "Asset Id"
+                },
+                "properties": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "实体自定义属性",
+                    "title": "Properties"
+                }
+            },
+            "required": [
+                "id",
+                "type",
+                "position"
+            ],
+            "title": "LevelEntity",
+            "type": "object"
+        },
+        "Position": {
+            "additionalProperties": false,
+            "description": "二维网格坐标，左下角为原点。",
+            "properties": {
+                "x": {
+                    "description": "横向网格坐标",
+                    "minimum": 0,
+                    "title": "X",
+                    "type": "integer"
+                },
+                "y": {
+                    "description": "纵向网格坐标",
+                    "minimum": 0,
+                    "title": "Y",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "title": "Position",
+            "type": "object"
+        }
+    },
+    "additionalProperties": false,
+    "description": "AI Level Studio 通用 2D 关卡协议。",
+    "properties": {
+        "protocol_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Protocol Version",
+            "type": "string"
+        },
+        "level_id": {
+            "minLength": 1,
+            "title": "Level Id",
+            "type": "string"
+        },
+        "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+        },
+        "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+        },
+        "width": {
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "Width",
+            "type": "integer"
+        },
+        "height": {
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "Height",
+            "type": "integer"
+        },
+        "cell_size": {
+            "default": 1.0,
+            "description": "每个网格单元的逻辑尺寸",
+            "exclusiveMinimum": 0,
+            "title": "Cell Size",
+            "type": "number"
+        },
+        "coordinate_system": {
+            "const": "cartesian_y_up",
+            "default": "cartesian_y_up",
+            "title": "Coordinate System",
+            "type": "string"
+        },
+        "entities": {
+            "description": "关卡实体列表",
+            "items": {
+                "$ref": "#/$defs/LevelEntity"
+            },
+            "title": "Entities",
+            "type": "array"
+        }
+    },
+    "required": [
+        "level_id",
+        "name",
+        "width",
+        "height"
+    ],
+    "title": "Level",
+    "type": "object",
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
